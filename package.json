@@ -1,7 +1,7 @@
 {
   "name": "unified-scrollbar",
-  "version": "1.0.0",
-  "description": "A zero-dependency npm package to unify and customize scrollbar styles across your entire web project with a single line of code.",
+  "version": "1.0.1",
+  "description": "A zero-dependency library for unifying cross-browser (WebKit/Firefox) scrollbar styles with a single API call or CSS import.",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "browser": "dist/index.umd.js",
