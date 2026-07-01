@@ -1,6 +1,6 @@
 {
   "name": "unified-scrollbar",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A zero-dependency library for unifying cross-browser (WebKit/Firefox) scrollbar styles with a single API call or CSS import.",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
