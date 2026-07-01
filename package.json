@@ -1,0 +1,54 @@
+{
+  "name": "unified-scrollbar",
+  "version": "1.0.0",
+  "description": "A zero-dependency npm package to unify and customize scrollbar styles across your entire web project with a single line of code.",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "browser": "dist/index.umd.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.cjs.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./css": "./dist/unified-scrollbar.css",
+    "./style.css": "./dist/unified-scrollbar.css"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js",
+    "dev": "node scripts/dev.js",
+    "demo": "node scripts/serve-demo.js",
+    "prepublishOnly": "npm run build",
+    "test": "node test/index.js"
+  },
+  "keywords": [
+    "scrollbar",
+    "scrollbar-style",
+    "unified-scrollbar",
+    "custom-scrollbar",
+    "css-scrollbar",
+    "scrollbar-theme",
+    "webkit-scrollbar",
+    "firefox-scrollbar",
+    "ui",
+    "css",
+    "style"
+  ],
+  "author": "luo luo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luoluoplus/unified-scrollbar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/luoluoplus/unified-scrollbar/issues"
+  },
+  "homepage": "https://github.com/luoluoplus/unified-scrollbar#readme",
+  "devDependencies": {}
+}

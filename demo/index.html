@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>unified-scrollbar — Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d14;
+      --bg2: #13131f;
+      --bg3: #1a1a2e;
+      --surface: #1e1e30;
+      --surface2: #252540;
+      --border: rgba(255,255,255,0.08);
+      --accent: #7c6dfa;
+      --accent2: #a78bfa;
+      --text: #e2e2f0;
+      --text2: #9898b8;
+      --text3: #6060a0;
+      --green: #34d399;
+      --radius: 12px;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Layout ── */
+    .hero {
+      text-align: center;
+      padding: 72px 24px 48px;
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124,109,250,0.25) 0%, transparent 70%);
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(124,109,250,0.15);
+      border: 1px solid rgba(124,109,250,0.4);
+      color: var(--accent2);
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 6vw, 3.8rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 30%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+    .hero p {
+      color: var(--text2);
+      font-size: 1.1rem;
+      max-width: 560px;
+      margin: 0 auto 36px;
+    }
+    .install-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      font-family: 'Fira Code', monospace;
+      font-size: 14px;
+      color: var(--green);
+    }
+    .copy-btn {
+      cursor: pointer;
+      background: rgba(124,109,250,0.2);
+      border: 1px solid rgba(124,109,250,0.4);
+      color: var(--accent2);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      transition: background 0.2s;
+    }
+    .copy-btn:hover { background: rgba(124,109,250,0.4); }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+
+    /* ── Section ── */
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .section { margin-bottom: 56px; }
+
+    /* ── Theme Grid ── */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .theme-card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .theme-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .theme-card.active { border-color: var(--accent); background: var(--surface2); }
+    .theme-card .name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+    .theme-card .desc { color: var(--text3); font-size: 11px; }
+    .theme-preview {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      margin: 0 auto 10px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Scroll Preview ── */
+    .preview-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    /* 关键修复：Grid 子项默认 min-width:auto 会撑破布局 */
+    .preview-wrap > div {
+      min-width: 0;
+      overflow: hidden;
+    }
+    @media (max-width: 640px) { .preview-wrap { grid-template-columns: 1fr; } }
+
+    .scroll-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      height: 240px;
+      overflow: auto;
+      padding: 12px;
+    }
+    .scroll-box-h {
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    .scroll-content-v { height: 700px; padding: 8px; }
+    /* 横向内容：用 flex 自然撑开，不需要硬写 width */
+    .scroll-content-h {
+      display: inline-flex;
+      align-items: stretch;
+      gap: 12px;
+      height: 100%;
+      padding: 8px 4px;
+      white-space: nowrap;
+    }
+    .scroll-item {
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      color: var(--text2);
+      font-size: 13px;
+      border: 1px solid var(--border);
+    }
+    .scroll-item:last-child { margin-bottom: 0; }
+    /* 横向卡片单独样式 */
+    .scroll-item-h {
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: 16px 20px;
+      color: var(--text2);
+      font-size: 13px;
+      border: 1px solid var(--border);
+      min-width: 160px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: border-color 0.2s;
+      white-space: normal;
+    }
+    .scroll-item-h:hover { border-color: var(--accent); }
+    .scroll-item-h .item-title { font-weight: 600; color: var(--text); font-size: 14px; }
+    .scroll-item-h .item-sub  { color: var(--text3); font-size: 11px; }
+
+    /* ── Config Panel ── */
+    .config-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .field input[type="color"] {
+      width: 100%; height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg3);
+      cursor: pointer;
+      padding: 2px;
+    }
+    .field input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    .field select {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+    .range-val { color: var(--accent2); font-size: 12px; margin-top: 2px; }
+
+    /* ── WebKit-only badge ── */
+    .webkit-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: rgba(251,191,36,0.15);
+      border: 1px solid rgba(251,191,36,0.35);
+      color: #fbbf24;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+      vertical-align: middle;
+      margin-left: 4px;
+      white-space: nowrap;
+    }
+
+    /* ── Firefox compat notice ── */
+    .compat-notice {
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+      background: rgba(251,191,36,0.08);
+      border: 1px solid rgba(251,191,36,0.3);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: 12.5px;
+      color: var(--text2);
+      line-height: 1.6;
+    }
+    .compat-notice.visible { display: flex; }
+    .compat-notice-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .compat-notice-close {
+      margin-left: auto;
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      color: var(--text3);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0 2px;
+    }
+    .compat-notice-close:hover { color: var(--text); }
+    .compat-notice strong { color: #fbbf24; }
+
+
+    /* ── Live Code Output ── */
+    .code-output {
+      margin-top: 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--bg3);
+    }
+    .code-output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+    }
+    .code-output-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .code-output-label::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+    }
+    .code-fmt-tabs {
+      display: flex;
+      gap: 3px;
+    }
+    .code-fmt-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text3);
+      padding: 3px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'Fira Code', monospace;
+    }
+    .code-fmt-btn.active {
+      background: rgba(124,109,250,0.2);
+      border-color: var(--accent);
+      color: var(--accent2);
+    }
+    .code-copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(124,109,250,0.15);
+      border: 1px solid rgba(124,109,250,0.3);
+      color: var(--accent2);
+      padding: 5px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .code-copy-btn:hover {
+      background: rgba(124,109,250,0.3);
+      border-color: var(--accent);
+    }
+    .code-copy-btn.copied {
+      background: rgba(52,211,153,0.2);
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .code-output-body {
+      padding: 16px 20px;
+      font-family: 'Fira Code', monospace;
+      font-size: 12.5px;
+      line-height: 1.9;
+      overflow-x: auto;
+      white-space: pre;
+      min-height: 80px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    /* Syntax tokens in generated code */
+    .t-kw  { color: #f9a8d4; }
+    .t-fn  { color: #a78bfa; }
+    .t-str { color: #86efac; }
+    .t-cm  { color: #5a5a8a; }
+    .t-prop{ color: #7dd3fc; }
+    .t-num { color: #fbbf24; }
+
+    /* ── Code Block ── */
+    .code-block {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .tok-kw  { color: #f9a8d4; }
+    .tok-fn  { color: #a78bfa; }
+    .tok-str { color: #86efac; }
+    .tok-cm  { color: #6060a0; }
+    .tok-nu  { color: #fbbf24; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 9999;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 32px;
+      color: var(--text3);
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+    }
+    footer a { color: var(--accent2); text-decoration: none; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+    .tab {
+      padding: 6px 16px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text2);
+      background: transparent;
+      transition: all 0.15s;
+    }
+    .tab.active { background: var(--surface2); border-color: var(--border); color: var(--text); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- ── Hero ── -->
+<div class="hero">
+  <div class="badge">✨ Zero Dependency</div>
+  <h1>unified-scrollbar</h1>
+  <p>One line of code to unify & customize scrollbars across your entire project — with full cross-browser support.</p>
+  <div class="install-box">
+    <span>$ npm install unified-scrollbar</span>
+    <button class="copy-btn" id="copyInstall" onclick="copyText('npm install unified-scrollbar', this)">Copy</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ── Themes ── -->
+  <div class="section">
+    <div class="section-title">🎨 Preset Themes</div>
+    <div class="theme-grid" id="themeGrid">
+      <div class="theme-card active" data-theme="default" onclick="selectTheme('default', this)">
+        <div class="theme-preview" style="background: linear-gradient(135deg,#888 40%,#ccc)"></div>
+        <div class="name">Default</div>
+        <div class="desc">Subtle gray</div>
+      </div>
+      <div class="theme-card" data-theme="dark" onclick="selectTheme('dark', this)">
+        <div class="theme-preview" style="background: linear-gradient(135deg,rgba(255,255,255,0.25) 40%,#111)"></div>
+        <div class="name">Dark</div>
+        <div class="desc">Dark UI friendly</div>
+      </div>
+      <div class="theme-card" data-theme="minimal" onclick="selectTheme('minimal', this)">
+        <div class="theme-preview" style="background: linear-gradient(135deg,rgba(0,0,0,0.2) 40%,transparent)"></div>
+        <div class="name">Minimal</div>
+        <div class="desc">Almost invisible</div>
+      </div>
+      <div class="theme-card" data-theme="macos" onclick="selectTheme('macos', this)">
+        <div class="theme-preview" style="background: linear-gradient(135deg,rgba(0,0,0,0.3) 40%,#f0f0f0)"></div>
+        <div class="name">macOS</div>
+        <div class="desc">Native macOS feel</div>
+      </div>
+      <div class="theme-card" data-theme="soft" onclick="selectTheme('soft', this)">
+        <div class="theme-preview" style="background: linear-gradient(135deg,#c4b5fd 40%,#f5f3ff)"></div>
+        <div class="name">Soft</div>
+        <div class="desc">Pastel purple</div>
+      </div>
+      <div class="theme-card" data-theme="neon" onclick="selectTheme('neon', this)">
+        <div class="theme-preview" style="background: linear-gradient(135deg,#00f5ff 40%,#0a0a0a)"></div>
+        <div class="name">Neon</div>
+        <div class="desc">Cyberpunk glow</div>
+      </div>
+      <div class="theme-card" data-theme="hidden" onclick="selectTheme('hidden', this)">
+        <div class="theme-preview" style="background: repeating-linear-gradient(45deg,#1a1a2e 0,#1a1a2e 4px,#252540 4px,#252540 8px)"></div>
+        <div class="name">Hidden</div>
+        <div class="desc">No scrollbar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Live Preview ── -->
+  <div class="section">
+    <div class="section-title">👀 Live Preview</div>
+    <div class="preview-wrap">
+      <div>
+        <p style="color:var(--text2);font-size:12px;margin-bottom:8px;">↕ Vertical scroll</p>
+        <div class="scroll-box" id="previewV">
+          <div class="scroll-content-v">
+            <div class="scroll-item">📄 Item 1 — scroll to see the scrollbar</div>
+            <div class="scroll-item">📄 Item 2 — Lorem ipsum dolor sit amet</div>
+            <div class="scroll-item">📄 Item 3 — consectetur adipiscing elit</div>
+            <div class="scroll-item">📄 Item 4 — sed do eiusmod tempor</div>
+            <div class="scroll-item">📄 Item 5 — incididunt ut labore</div>
+            <div class="scroll-item">📄 Item 6 — et dolore magna aliqua</div>
+            <div class="scroll-item">📄 Item 7 — Ut enim ad minim veniam</div>
+            <div class="scroll-item">📄 Item 8 — quis nostrud exercitation</div>
+            <div class="scroll-item">📄 Item 9 — ullamco laboris nisi</div>
+            <div class="scroll-item">📄 Item 10 — ut aliquip ex ea commodo</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p style="color:var(--text2);font-size:12px;margin-bottom:8px;">↔ Horizontal scroll</p>
+        <div class="scroll-box scroll-box-h" id="previewH">
+          <div class="scroll-content-h">
+            <div class="scroll-item-h"><span class="item-title">📦 react</span><span class="item-sub">v18.3.1 · 45.2 KB</span></div>
+            <div class="scroll-item-h"><span class="item-title">📦 vue</span><span class="item-sub">v3.4.0 · 38.7 KB</span></div>
+            <div class="scroll-item-h"><span class="item-title">📦 vite</span><span class="item-sub">v5.2.0 · 12.1 KB</span></div>
+            <div class="scroll-item-h"><span class="item-title">📦 tailwindcss</span><span class="item-sub">v3.4.3 · 5.4 MB</span></div>
+            <div class="scroll-item-h"><span class="item-title">📦 typescript</span><span class="item-sub">v5.4.5 · 8.2 MB</span></div>
+            <div class="scroll-item-h"><span class="item-title">📦 axios</span><span class="item-sub">v1.7.2 · 59.3 KB</span></div>
+            <div class="scroll-item-h"><span class="item-title">📦 zustand</span><span class="item-sub">v4.5.2 · 12.4 KB</span></div>
+            <div class="scroll-item-h"><span class="item-title">📦 lodash-es</span><span class="item-sub">v4.17.21 · 2.1 MB</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Custom Config ── -->
+  <div class="section">
+    <div class="section-title">⚙️ Custom Configuration</div>
+    <div class="config-panel">
+      <!-- Firefox compat notice -->
+      <div class="compat-notice" id="ffNotice">
+        <span class="compat-notice-icon">🦊</span>
+        <span>
+          <strong>Firefox 提示：</strong> <strong>Width</strong> 与 <strong>Border Radius</strong> 两项在 Firefox 上无效 —— Firefox 仅支持 <code>scrollbar-width: thin/auto/none</code>，不支持精确的 px 宽度和圆角。请在 <strong>Chrome / Edge / Safari</strong> 中查看完整效果。
+        </span>
+        <button class="compat-notice-close" onclick="document.getElementById('ffNotice').classList.remove('visible')" title="关闭">×</button>
+      </div>
+      <div class="config-grid">
+        <div class="field">
+          <label>Thumb Color</label>
+          <input type="color" id="thumbColor" value="#888888" oninput="livePreview()" />
+        </div>
+        <div class="field">
+          <label>Thumb Hover</label>
+          <input type="color" id="thumbHoverColor" value="#555555" oninput="livePreview()" />
+        </div>
+        <div class="field">
+          <label>Track Color</label>
+          <input type="color" id="trackColor" value="#1a1a2e" oninput="livePreview()" />
+        </div>
+        <div class="field">
+          <label>Width: <span class="range-val" id="widthVal">8px</span><span class="webkit-badge" title="仅在 Chrome / Edge / Safari (WebKit) 中生效">⚠ WebKit only</span></label>
+          <input type="range" id="scrollWidth" min="2" max="20" value="8" oninput="updateRange(this,'widthVal','px');livePreview()" />
+        </div>
+        <div class="field">
+          <label>Border Radius: <span class="range-val" id="radiusVal">4px</span><span class="webkit-badge" title="仅在 Chrome / Edge / Safari (WebKit) 中生效">⚠ WebKit only</span></label>
+          <input type="range" id="scrollRadius" min="0" max="12" value="4" oninput="updateRange(this,'radiusVal','px');livePreview()" />
+        </div>
+        <div class="field">
+          <label>Target</label>
+          <select id="targetSel" onchange="livePreview()">
+            <option value="global">global (*)</option>
+            <option value="body">body only</option>
+            <option value="#previewV">#previewV (demo only)</option>
+          </select>
+        </div>
+      </div>
+
+
+
+      <!-- Live Code Output -->
+      <div class="code-output" id="codeOutput">
+        <div class="code-output-header">
+          <span class="code-output-label">Live Code · updates as you configure</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="code-fmt-tabs">
+              <button class="code-fmt-btn active" id="fmtEsm"  onclick="setFmt('esm',this)">ESM</button>
+              <button class="code-fmt-btn"        id="fmtCjs"  onclick="setFmt('cjs',this)">CJS</button>
+              <button class="code-fmt-btn"        id="fmtCss"  onclick="setFmt('css',this)">CSS</button>
+            </div>
+            <button class="code-copy-btn" id="codeCopyBtn" onclick="copyCode()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span id="codeCopyLabel">Copy</span>
+            </button>
+          </div>
+        </div>
+        <div class="code-output-body" id="codeOutputBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Usage ── -->
+  <div class="section">
+    <div class="section-title">💻 Usage</div>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('esm',this)">ESM / bundler</button>
+      <button class="tab" onclick="showTab('cjs',this)">CommonJS</button>
+      <button class="tab" onclick="showTab('cdn',this)">CDN</button>
+      <button class="tab" onclick="showTab('cssonly',this)">CSS only</button>
+      <button class="tab" onclick="showTab('ssr',this)">SSR / Next.js</button>
+    </div>
+
+    <div id="tab-esm" class="tab-panel active">
+      <div class="code-block"><span class="tok-cm">// Install: npm install unified-scrollbar</span>
+
+<span class="tok-kw">import</span> UnifiedScrollbar <span class="tok-kw">from</span> <span class="tok-str">'unified-scrollbar'</span>;
+
+<span class="tok-cm">// ① Apply default theme globally (one line!)</span>
+UnifiedScrollbar.<span class="tok-fn">apply</span>();
+
+<span class="tok-cm">// ② Use a preset theme</span>
+UnifiedScrollbar.<span class="tok-fn">applyTheme</span>(<span class="tok-str">'dark'</span>);
+UnifiedScrollbar.<span class="tok-fn">applyTheme</span>(<span class="tok-str">'neon'</span>);
+
+<span class="tok-cm">// ③ Fully custom</span>
+UnifiedScrollbar.<span class="tok-fn">apply</span>({
+  width: <span class="tok-str">'10px'</span>,
+  thumbColor: <span class="tok-str">'#7c6dfa'</span>,
+  thumbHoverColor: <span class="tok-str">'#a78bfa'</span>,
+  trackColor: <span class="tok-str">'rgba(0,0,0,0.1)'</span>,
+  borderRadius: <span class="tok-str">'5px'</span>,
+});
+
+<span class="tok-cm">// ④ Target a specific element</span>
+UnifiedScrollbar.<span class="tok-fn">apply</span>({ target: <span class="tok-str">'#sidebar'</span> });
+
+<span class="tok-cm">// ⑤ Remove styles</span>
+UnifiedScrollbar.<span class="tok-fn">remove</span>();</div>
+    </div>
+
+    <div id="tab-cjs" class="tab-panel">
+      <div class="code-block"><span class="tok-kw">const</span> UnifiedScrollbar = <span class="tok-fn">require</span>(<span class="tok-str">'unified-scrollbar'</span>);
+
+UnifiedScrollbar.<span class="tok-fn">apply</span>();
+UnifiedScrollbar.<span class="tok-fn">applyTheme</span>(<span class="tok-str">'macos'</span>);</div>
+    </div>
+
+    <div id="tab-cdn" class="tab-panel">
+      <div class="code-block"><span class="tok-cm">&lt;!-- Via CDN (jsDelivr) --&gt;</span>
+&lt;<span class="tok-kw">script</span> src=<span class="tok-str">"https://cdn.jsdelivr.net/npm/unified-scrollbar/dist/index.umd.js"</span>&gt;&lt;/<span class="tok-kw">script</span>&gt;
+&lt;<span class="tok-kw">script</span>&gt;
+  UnifiedScrollbar.<span class="tok-fn">apply</span>();
+  <span class="tok-cm">// or</span>
+  UnifiedScrollbar.<span class="tok-fn">applyTheme</span>(<span class="tok-str">'soft'</span>);
+&lt;/<span class="tok-kw">script</span>&gt;</div>
+    </div>
+
+    <div id="tab-cssonly" class="tab-panel">
+      <div class="code-block"><span class="tok-cm">/* Option A: Import in CSS */</span>
+<span class="tok-kw">@import</span> <span class="tok-str">'unified-scrollbar/css'</span>;
+
+<span class="tok-cm">/* Option B: Import in JS/TS */</span>
+<span class="tok-kw">import</span> <span class="tok-str">'unified-scrollbar/style.css'</span>;</div>
+    </div>
+
+    <div id="tab-ssr" class="tab-panel">
+      <div class="code-block"><span class="tok-cm">// Next.js — _app.tsx</span>
+<span class="tok-kw">import</span> { useEffect } <span class="tok-kw">from</span> <span class="tok-str">'react'</span>;
+<span class="tok-kw">import</span> <span class="tok-kw">type</span> { AppProps } <span class="tok-kw">from</span> <span class="tok-str">'next/app'</span>;
+
+<span class="tok-kw">export default function</span> <span class="tok-fn">App</span>({ Component, pageProps }: AppProps) {
+  <span class="tok-fn">useEffect</span>(() => {
+    <span class="tok-kw">import</span>(<span class="tok-str">'unified-scrollbar'</span>).<span class="tok-fn">then</span>(m => m.<span class="tok-fn">default</span>.<span class="tok-fn">applyTheme</span>(<span class="tok-str">'dark'</span>));
+  }, []);
+  <span class="tok-kw">return</span> &lt;Component {...pageProps} /&gt;;
+}
+
+<span class="tok-cm">// SSR CSS generation (server-side)</span>
+<span class="tok-kw">import</span> { generateCSS } <span class="tok-kw">from</span> <span class="tok-str">'unified-scrollbar'</span>;
+<span class="tok-kw">const</span> css = <span class="tok-fn">generateCSS</span>({ thumbColor: <span class="tok-str">'#7c6dfa'</span> });</div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>unified-scrollbar — MIT License &nbsp;|&nbsp; <a href="https://github.com/your-username/unified-scrollbar">GitHub</a> &nbsp;|&nbsp; <a href="https://www.npmjs.com/package/unified-scrollbar">npm</a></p>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="/dist/index.umd.js"></script>
+<script>
+  // Apply default theme on load
+  UnifiedScrollbar.applyTheme('default');
+
+  // ── Browser compat notice (Firefox) ─────────────────────────────────────────
+  // Firefox 不支持 ::-webkit-scrollbar 系列，Width / Border Radius 在其中无效
+  if (/Firefox\//.test(navigator.userAgent)) {
+    document.getElementById('ffNotice').classList.add('visible');
+  }
+
+  // ── Theme selector ──────────────────────────────────────────────────────────
+  function selectTheme(name, el) {
+    document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    UnifiedScrollbar.applyTheme(name);
+    showToast(`Theme "${name}" applied!`);
+    updateCodeFromTheme(name);
+  }
+
+  // ── Range display ───────────────────────────────────────────────────────────
+  function updateRange(input, valId, suffix) {
+    document.getElementById(valId).textContent = input.value + suffix;
+  }
+
+  // ── Live custom preview ─────────────────────────────────────────────────────
+  let currentFmt = 'esm';
+
+  function livePreview() {
+    const opts = getCustomOpts();
+    UnifiedScrollbar.apply(opts);
+    renderCodeOutput(opts);
+  }
+
+  function getCustomOpts() {
+    return {
+      thumbColor:      document.getElementById('thumbColor').value,
+      thumbHoverColor: document.getElementById('thumbHoverColor').value,
+      trackColor:      document.getElementById('trackColor').value,
+      width:           document.getElementById('scrollWidth').value + 'px',
+      height:          document.getElementById('scrollWidth').value + 'px',
+      borderRadius:    document.getElementById('scrollRadius').value + 'px',
+      target:          document.getElementById('targetSel').value,
+    };
+  }
+
+
+
+  // ── Code Output ──────────────────────────────────────────────────────────────
+  function setFmt(fmt, btn) {
+    currentFmt = fmt;
+    document.querySelectorAll('.code-fmt-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderCodeOutput(getCustomOpts());
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function buildObjLines(opts) {
+    // Only include non-default or all visible ones
+    const target = opts.target !== 'global' ? opts.target : null;
+    const lines = [
+      `  <span class="t-prop">thumbColor</span>:      <span class="t-str">'${escHtml(opts.thumbColor)}'</span>,`,
+      `  <span class="t-prop">thumbHoverColor</span>: <span class="t-str">'${escHtml(opts.thumbHoverColor)}'</span>,`,
+      `  <span class="t-prop">trackColor</span>:      <span class="t-str">'${escHtml(opts.trackColor)}'</span>,`,
+      `  <span class="t-prop">width</span>:           <span class="t-str">'${escHtml(opts.width)}'</span>,`,
+      `  <span class="t-prop">height</span>:          <span class="t-str">'${escHtml(opts.height)}'</span>,`,
+      `  <span class="t-prop">borderRadius</span>:    <span class="t-str">'${escHtml(opts.borderRadius)}'</span>,`,
+    ];
+    if (target) lines.push(`  <span class="t-prop">target</span>:          <span class="t-str">'${escHtml(target)}'</span>,`);
+    return lines.join('\n');
+  }
+
+  function buildPlainObj(opts) {
+    // Plain text version for clipboard
+    const target = opts.target !== 'global' ? opts.target : null;
+    const lines = [
+      `  thumbColor:      '${opts.thumbColor}',`,
+      `  thumbHoverColor: '${opts.thumbHoverColor}',`,
+      `  trackColor:      '${opts.trackColor}',`,
+      `  width:           '${opts.width}',`,
+      `  height:          '${opts.height}',`,
+      `  borderRadius:    '${opts.borderRadius}',`,
+    ];
+    if (target) lines.push(`  target:          '${target}',`);
+    return lines.join('\n');
+  }
+
+  function renderCodeOutput(opts) {
+    const body = document.getElementById('codeOutputBody');
+    let html = '';
+
+    if (currentFmt === 'esm') {
+      html =
+        `<span class="t-kw">import</span> UnifiedScrollbar <span class="t-kw">from</span> <span class="t-str">'unified-scrollbar'</span>;
+
+UnifiedScrollbar.<span class="t-fn">apply</span>({
+${buildObjLines(opts)}
+});`;
+    } else if (currentFmt === 'cjs') {
+      html =
+        `<span class="t-kw">const</span> UnifiedScrollbar = <span class="t-fn">require</span>(<span class="t-str">'unified-scrollbar'</span>);
+
+UnifiedScrollbar.<span class="t-fn">apply</span>({
+${buildObjLines(opts)}
+});`;
+    } else {
+      // CSS format — show raw CSS via generateCSS
+      const rawCSS = UnifiedScrollbar.generateCSS(opts);
+      html = `<span class="t-cm">/* unified-scrollbar — generated CSS */</span>
+<span class="t-cm">/* @import 'unified-scrollbar/css'; or paste directly */</span>
+
+${escHtml(rawCSS)}`;
+    }
+
+    body.innerHTML = html;
+    // Store plain text for copy
+    body.dataset.plain = buildPlainText(opts);
+  }
+
+  function buildPlainText(opts) {
+    if (currentFmt === 'esm') {
+      return `import UnifiedScrollbar from 'unified-scrollbar';
+
+UnifiedScrollbar.apply({
+${buildPlainObj(opts)}
+});`;
+    } else if (currentFmt === 'cjs') {
+      return `const UnifiedScrollbar = require('unified-scrollbar');
+
+UnifiedScrollbar.apply({
+${buildPlainObj(opts)}
+});`;
+    } else {
+      return UnifiedScrollbar.generateCSS(opts);
+    }
+  }
+
+  let copyTimer;
+  function copyCode() {
+    const body = document.getElementById('codeOutputBody');
+    const text = body.dataset.plain || body.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn  = document.getElementById('codeCopyBtn');
+      const lbl  = document.getElementById('codeCopyLabel');
+      btn.classList.add('copied');
+      lbl.textContent = 'Copied!';
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(() => {
+        btn.classList.remove('copied');
+        lbl.textContent = 'Copy';
+      }, 1800);
+    });
+  }
+
+  // Init code output on load
+  renderCodeOutput(getCustomOpts());
+
+  // ── Tabs ────────────────────────────────────────────────────────────────────
+  function showTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ── Toast ───────────────────────────────────────────────────────────────────
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = '✓ ' + msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ── Copy ────────────────────────────────────────────────────────────────────
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1500);
+    });
+  }
+
+  function updateCodeFromTheme(name) {}
+</script>
+</body>
+</html>
